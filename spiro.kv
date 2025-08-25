@@ -1,0 +1,265 @@
+
+#: import math math
+
+<Button>
+    background_normal: ""
+    background_color: (0.1, 0.1, 0.15)
+    font_size: 15
+    halign: "center"
+
+<Label>
+    size_hint: (1, 0.35)
+    background_color: (0.1, 0.15, 0.2)
+    font_size: 20
+    
+<Slider>
+    size_hint: (1, 0.35)
+    orientation: "horizontal"
+    step: 1
+
+<BoxLayout>
+    background_color: (0.1, .10, .15, 1)
+
+
+<Gear>
+    size: 20, 20
+
+    canvas:
+        Color:
+            rgba: self.color_outline
+        Ellipse:
+            size: self.size[0] + 10, self.size[1] + 10
+            pos: self.pos
+        Color:
+            rgba: self.color_fill
+        Ellipse:
+            size: self.size[0], self.size[1]
+            pos: self.pos[0] + 5, self.pos[1] + 5
+
+
+<Pen>
+    size: self.diameter, self.diameter
+    canvas:
+        Color:
+            rgba:(1, 0, 0, 1)
+        Ellipse:
+            size: self.size
+            pos: self.pos
+
+
+<AppLayout>
+    #   prefixes:
+    #   's_' for slider
+    #   'b_' for buttons
+    #   'r_' for references
+    s_outer_gear: s_og_id
+    s_inner_gear: s_ig_id
+    s_pen_displacement: s_pd_id
+    b_clear: b_clear_id
+    b_hide: b_hide_id
+    b_save: b_save_id
+    b_draw: b_draw_id
+    b_pen_color: b_pen_color_id
+
+    r_outer_gear: outer_gear_id
+    r_inner_gear: inner_gear_id
+    r_pen: pen_id
+
+    r_draw_area: w_draw_area_id
+    
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+
+
+        # Splitter:
+            # sizable_from: "bottom"
+        Widget:
+            id: w_draw_area_id
+            # size: (root.width, root.height)
+            size_hint: (1, 0.6)
+            background_color: (0.02, 0.02, 0.05, 1)
+            line_color: (0, 1, 0, 1)
+            canvas.before:
+                Color:
+                    rgba: self.background_color
+                Rectangle:            
+                    pos: self.pos
+                    size: self.size
+            canvas.after:
+                Color:
+                    rgba: root.line_color_prop
+                Line:
+                    points: root.points
+                    width: 1
+                    
+            OuterGear:
+                id: outer_gear_id
+                diameter: s_og_id.value
+                size: self.diameter, self.diameter
+                pos:  self.get_start_pos(self.parent.center, root)
+                res: self.update_color((1, 1, 1, 1), app.background_color)
+                
+
+            InnerGear:
+                id: inner_gear_id
+                diameter: s_ig_id.value
+                size: self.diameter, self.diameter
+                pos: self.get_start_pos(outer_gear_id.pos, outer_gear_id.diameter, root)
+                res: self.update_color((1, 1, 1, 1), app.background_color)
+
+            Pen:
+                id: pen_id
+                displacement: s_pd_id.value
+                pos: self.get_start_pos(inner_gear_id.pos, inner_gear_id.diameter, root)
+    
+        BoxLayout:
+            # size: (root.width, root.height * 0.2)
+            size_hint: (1, 0.4)
+            orientation: "vertical"
+
+            #   Padding pads their sides
+            padding: 10
+            #   spacing affects gap between above and below Widgets
+            spacing: 5
+
+            canvas.before:
+                Color:
+                    # rgba: (0.45, .10, .30, 1)
+                    rgba: self.background_color
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            GridLayout:
+                rows: 8
+                size_hint: (1, 0.7)
+                
+                Label:
+                    text: "Outer Circle Diameter: " + str(s_og_id.value)
+                    
+                Slider:
+                    id: s_og_id
+                    min: 120
+                    max: 300 + math.ceil(root.width * 0.05) + math.ceil(root.height * 0.05)
+                    step: 0.5
+                    on_value: root.slider_value(self, *args)
+
+                Label:
+                    text: "Inner Circle Diameter: " + str(s_ig_id.value)
+                Slider:
+                    id: s_ig_id
+                    min: 25
+                    max: outer_gear_id.diameter - 10
+                    step: 0.5
+                    on_value: root.slider_value(self, *args)
+
+                Label:
+                    text: "Pen Displacement: " + str(s_pd_id.value)
+                Slider:
+                    id: s_pd_id
+                    min: -1 * (inner_gear_id.diameter / 2 + 10)
+                    max: inner_gear_id.diameter / 2 + 10
+                    step: 0.5
+                    on_value: root.slider_value(self, *args)
+
+                Label:
+                    text: "Draw Speed: " + str(s_ds_id.value)
+                Slider:
+                    id: s_ds_id
+                    min: 1
+                    max: 20
+                    step: 0.5
+                    value: 5
+                
+            Button:
+                id: b_draw_id
+                text: "Draw"
+                size_hint: (0.65, 0.1)
+                pos_hint: {"center_x": 0.5}
+                on_press: root.on_draw_btn_press(self)
+            
+            GridLayout:
+                cols: 4
+                size_hint: (1, 0.2)
+                padding: 5
+                spacing: 10
+                
+
+                Button:
+                    id: b_clear_id
+                    text: "Clear"
+                    on_press: root.on_clear_btn_press(self)
+
+                Button:
+                    id: b_hide_id
+                    text: "Hide\nGears" if root.b_display_gears else "Show\nGears"
+                    on_press: root.on_hide_gear_btn_press(self)
+
+                Button:
+                    id: b_save_id
+                    text: "Save"
+                    on_press: root.on_save_btn_press(self)
+ 
+                Button:
+                    id: b_pen_color_id
+                    text: "Pen\nColor"
+                    on_press: root.on_pen_color_btn_press(self)
+
+
+
+<MiscPopup>
+    title: "A Popup Box"
+    auto_dismiss: False
+    # size_hint: None, None
+    size_hint: (1, 0.7)
+    # size: app.root.width, app.root.height * 0.45
+
+    pos_hint: {"x":0, "top": 0.7}
+
+
+#   The Column is used when you're both definng and creating an instance of the class.
+<SaveDialog>
+    text_input: text_input_id
+
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        padding: 1
+        spacing: 10
+
+        FileChooserListView:
+            id: id_filechooser
+            on_selection: text_input_id.text = self.selection and self.selection[0]
+            # size_hint: None, None
+            # size_hint: (1, 1)
+            # size: root.size[0] * 0.7, root.size[1] * 0.7
+
+
+        GridLayout:
+            size_hint_y: 0.1
+            cols: 2
+            Label:
+                size_hint_x: None
+                width: root.width * 0.2
+                text: "File Name:"
+            TextInput:
+                id: text_input_id
+                size_hint_x: None
+                width: root.width * 0.8
+                multiline: False
+        
+        BoxLayout:
+            size_hint_y: 0.1
+            height: 20
+            Button:
+                size_hint_y: 1
+                text: "Cancel"
+                on_release: root.cancel()
+            
+            Button:
+                size_hint_y: 1
+                text: "Save"
+                on_release: root.save(id_filechooser.path, text_input_id.text)
+                # on_release: print(id_filechooser.path)
